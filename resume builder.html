@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Resume Builder</title>
+  <style>
+    /* General Styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f8f9fa;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .form-section, .resume-preview {
+      flex: 1 1 45%;
+      margin: 10px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    label, input, textarea, select, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    textarea, input, select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Resume Preview Styling */
+    #preview-container {
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+
+    #preview-container h2 {
+      margin-bottom: 5px;
+      font-size: 20px;
+    }
+
+    #preview-container h3 {
+      margin-top: 15px;
+      margin-bottom: 5px;
+      font-size: 18px;
+    }
+
+    #preview-container p {
+      margin: 5px 0;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .form-section, .resume-preview {
+        width: 100%;
+        margin: 5px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+    <h1>ATS-Friendly Resume Builder</h1>
+    <div class="container">
+    <div class="form-section">
+      <form id="resume-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" placeholder="Your Name" required>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" placeholder="Your Email" required>
+
+        <label for="phone">Phone Number:</label>
+        <input type="tel" id="phone" placeholder="Your Phone Number" required>
+
+        <label for="summary">Profile Summary:</label>
+        <textarea id="summary" rows="3" placeholder="Brief description about yourself"></textarea>
+
+        <div id="education-section">
+          <h3>Education</h3>
+          <div class="education-row">
+            <input type="text" placeholder="Degree" class="education-input">
+            <input type="text" placeholder="Institution" class="education-input">
+            <input type="text" placeholder="Year" class="education-input">
+          </div>
+        </div>
+        <button type="button" id="add-education">+ Add Education</button>
+
+        <div id="experience-section">
+          <h3>Experience</h3>
+          <div class="experience-row">
+            <input type="text" placeholder="Job Title" class="experience-input">
+            <input type="text" placeholder="Company" class="experience-input">
+            <textarea placeholder="Description" class="experience-input"></textarea>
+          </div>
+        </div>
+        <button type="button" id="add-experience">+ Add Experience</button>
+
+        <label for="skills">Skills:</label>
+        <select id="skills" multiple>
+          <option value="HTML">HTML</option>
+          <option value="CSS">CSS</option>
+          <option value="JavaScript">JavaScript</option>
+          <option value="Python">Python</option>
+          <option value="SQL">SQL</option>
+        </select>
+
+        <button type="button" id="clear-form">Clear Form</button>
+        <button type="button" id="download-pdf">Download PDF</button>
+      </form>
+    </div>
+
+    <!-- Resume Preview -->
+    <div class="resume-preview">
+      <h2>Live Resume Preview</h2>
+      <div id="preview-container"></div>
+    </div>
+  </div>
+
+  <!-- Script Section -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script>
+    const form = document.getElementById('resume-form');
+    const preview = document.getElementById('preview-container');
+    const addEducationButton = document.getElementById('add-education');
+    const addExperienceButton = document.getElementById('add-experience');
+    const clearFormButton = document.getElementById('clear-form');
+    const downloadPDFButton = document.getElementById('download-pdf');
+
+    const syncPreview = () => {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+      const summary = document.getElementById('summary').value;
+
+      const educationRows = Array.from(document.querySelectorAll('.education-row')).map(row => {
+        const inputs = row.querySelectorAll('.education-input');
+        return `${inputs[0].value} at ${inputs[1].value} (${inputs[2].value})`;
+      });
+
+      const experienceRows = Array.from(document.querySelectorAll('.experience-row')).map(row => {
+        const inputs = row.querySelectorAll('.experience-input');
+        return `${inputs[0].value} at ${inputs[1].value}: ${inputs[2].value}`;
+      });
+
+      const skills = Array.from(document.getElementById('skills').selectedOptions)
+        .map(option => option.value)
+        .join(', ');
+
+      preview.innerHTML = `
+        <h2>${name}</h2>
+        <p>Email: ${email}</p>
+        <p>Phone: ${phone}</p>
+        <h3>Profile Summary</h3>
+        <p>${summary}</p>
+        <h3>Education</h3>
+        <p>${educationRows.join('<br>')}</p>
+        <h3>Experience</h3>
+        <p>${experienceRows.join('<br>')}</p>
+        <h3>Skills</h3>
+        <p>${skills}</p>
+      `;
+    };
+
+    form.addEventListener('input', syncPreview);
+
+    addEducationButton.addEventListener('click', () => {
+      const educationRow = document.createElement('div');
+      educationRow.classList.add('education-row');
+      educationRow.innerHTML = `
+        <input type="text" placeholder="Degree" class="education-input">
+        <input type="text" placeholder="Institution" class="education-input">
+        <input type="text" placeholder="Year" class="education-input">
+      `;
+      document.getElementById('education-section').appendChild(educationRow);
+    });
+
+    addExperienceButton.addEventListener('click', () => {
+      const experienceRow = document.createElement('div');
+      experienceRow.classList.add('experience-row');
+      experienceRow.innerHTML = `
+        <input type="text" placeholder="Job Title" class="experience-input">
+        <input type="text" placeholder="Company" class="experience-input">
+        <textarea placeholder="Description" class="experience-input"></textarea>
+      `;
+      document.getElementById('experience-section').appendChild(experienceRow);
+    });
+
+    clearFormButton.addEventListener('click', () => {
+      form.reset();
+      preview.innerHTML = '';
+    });
+
+    downloadPDFButton.addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+
+      pdf.text(preview.innerText, 10, 10);
+      pdf.save('resume.pdf');
+    });
+  </script>
+</body>
+</html>
